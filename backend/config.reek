@@ -1,0 +1,9 @@
+---
+
+TooManyInstanceVariables:
+  max_instance_variables: 5
+
+TooManyStatements:
+  max_statements: 6
+  exclude:
+  - initialize
