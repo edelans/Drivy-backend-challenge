@@ -95,33 +95,6 @@ class Rental
   end
 end
 
-# describes a modification of a rental_id
-# attributes open to changes are : start_date, end_date, distance
-class RentalModification
-  attr_reader :id, :rental, :start_date, :end_date, :distance
-
-  # initialize rentalModification with a dependency injection (rental)
-  def initialize(id, rental, start_date = nil, end_date = nil, distance = nil)
-    @id = id
-    @rental = rental
-    @start_date = start_date
-    @end_date = end_date
-    @distance = distance
-  end
-
-  def modified_rental
-    Rental.new(rental.id,
-               start_date || rental.start_date,
-               end_date || rental.end_date,
-               distance || rental.distance,
-               rental.car,
-               rental.deductible_reduction)
-  end
-
-  def generate_modification_actions_hash
-  end
-end
-
 # describes how much money must be debited/credited for each actor
 # actor can be driver/owner/insurance/assistance/drivy
 class Action
@@ -135,6 +108,41 @@ class Action
 
   def to_hash
     { who: @who, type: @type, amount: @amount }
+  end
+end
+
+# describes a modification of a rental_id
+# attributes open to changes are : start_date, end_date, distance
+class RentalModification
+  attr_accessor :id, :rental, :start_date, :end_date, :distance
+
+  # initialize rentalModification with a dependency injection (rental)
+  def initialize(id, rental, start_date = nil, end_date = nil, distance = nil)
+    @id = id
+    @rental = rental
+    @start_date = start_date
+    @end_date = end_date
+    @distance = distance
+  end
+
+  def modified_rental
+    # TODO: review following syntax
+    @modified_rental ||= Rental.new(rental.id,
+                                    start_date || rental.start_date,
+                                    end_date || rental.end_date,
+                                    distance || rental.distance,
+                                    rental.car,
+                                    rental.deductible_reduction)
+  end
+
+  def generate_actions_hash
+    actions = []
+    actions.push(Action.new('driver', - (modified_rental.price + modified_rental.deductible_reduction_fee) + (rental.price + rental.deductible_reduction_fee)).to_hash)
+    actions.push(Action.new('owner', (modified_rental.price - modified_rental.insurance_fee - modified_rental.assistance_fee - modified_rental.drivy_fee) -(rental.price - rental.insurance_fee - rental.assistance_fee - rental.drivy_fee)).to_hash)
+    actions.push(Action.new('insurance', modified_rental.insurance_fee - rental.insurance_fee).to_hash)
+    actions.push(Action.new('assistance', modified_rental.assistance_fee - rental.assistance_fee).to_hash)
+    actions.push(Action.new('drivy', (modified_rental.drivy_fee + modified_rental.deductible_reduction_fee) - (rental.drivy_fee + rental.deductible_reduction_fee)).to_hash)
+    actions
   end
 end
 
@@ -157,7 +165,7 @@ end
 # and reorganize rentals objects in a hash easily searchable by id
 rentals = {}
 input['rentals'].each do |rental_hash|
-  rentals[rentaly_hash['id']] = Rental.new(
+  rentals[rental_hash['id']] = Rental.new(
     rental_hash['id'],
     rental_hash['start_date'],
     rental_hash['end_date'],
@@ -170,20 +178,22 @@ end
 # parse the json into rental modifications objects
 # keeping the json structure
 rental_modifications = input['rental_modifications'].map do |rental_modification_hash|
-  Rental.new(
+  RentalModification.new(
     rental_modification_hash['id'],
     rentals[rental_modification_hash['rental_id']],
     rental_modification_hash['start_date'],
     rental_modification_hash['end_date'],
-    rental_modification_hash['distance'],
+    rental_modification_hash['distance']
   )
 end
+
 # generate output hash
 output = {
-  rentals: rentals.map do |rental|
+  rental_modifications: rental_modifications.map do |rental_modification|
     {
-      id: rental.id,
-      actions: rental.generate_actions_hash
+      id: rental_modification.id,
+      rental_id: rental_modification.rental.id,
+      actions: rental_modification.generate_actions_hash
     }
   end
 }
