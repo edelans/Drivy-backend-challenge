@@ -48,7 +48,7 @@ class Rental
   end
 
   def duration
-    1 + (Date.parse(@end_date) - Date.parse(@start_date)).to_i
+    1 + (@end_date - @start_date).to_i
   end
 
   def price_time_component
