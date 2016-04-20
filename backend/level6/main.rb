@@ -107,11 +107,11 @@ class Rental
 
   def generate_actions_hash
     actions = []
-    actions.push(Action.new('driver', driver_amount).to_hash)
-    actions.push(Action.new('owner', owner_amount).to_hash)
-    actions.push(Action.new('insurance', insurance_amount).to_hash)
-    actions.push(Action.new('assistance', assistance_amount).to_hash)
-    actions.push(Action.new('drivy', drivy_amount).to_hash)
+    actions.push(Action.new('driver', driver_amount).to_h)
+    actions.push(Action.new('owner', owner_amount).to_h)
+    actions.push(Action.new('insurance', insurance_amount).to_h)
+    actions.push(Action.new('assistance', assistance_amount).to_h)
+    actions.push(Action.new('drivy', drivy_amount).to_h)
     actions
   end
 end
@@ -127,7 +127,7 @@ class Action
     @type = amount > 0 ? 'credit' : 'debit'
   end
 
-  def to_hash
+  def to_h
     { who: @who, type: @type, amount: @amount }
   end
 end
@@ -158,11 +158,11 @@ class RentalModification
 
   def generate_actions_hash
     actions = []
-    actions.push(Action.new('driver', - (modified_rental.price + modified_rental.deductible_reduction_fee) + (rental.price + rental.deductible_reduction_fee)).to_hash)
-    actions.push(Action.new('owner', (modified_rental.price - modified_rental.insurance_fee - modified_rental.assistance_fee - modified_rental.drivy_fee) -(rental.price - rental.insurance_fee - rental.assistance_fee - rental.drivy_fee)).to_hash)
-    actions.push(Action.new('insurance', modified_rental.insurance_fee - rental.insurance_fee).to_hash)
-    actions.push(Action.new('assistance', modified_rental.assistance_fee - rental.assistance_fee).to_hash)
-    actions.push(Action.new('drivy', (modified_rental.drivy_fee + modified_rental.deductible_reduction_fee) - (rental.drivy_fee + rental.deductible_reduction_fee)).to_hash)
+    actions.push(Action.new('driver', - (modified_rental.price + modified_rental.deductible_reduction_fee) + (rental.price + rental.deductible_reduction_fee)).to_h)
+    actions.push(Action.new('owner', (modified_rental.price - modified_rental.insurance_fee - modified_rental.assistance_fee - modified_rental.drivy_fee) -(rental.price - rental.insurance_fee - rental.assistance_fee - rental.drivy_fee)).to_h)
+    actions.push(Action.new('insurance', modified_rental.insurance_fee - rental.insurance_fee).to_h)
+    actions.push(Action.new('assistance', modified_rental.assistance_fee - rental.assistance_fee).to_h)
+    actions.push(Action.new('drivy', (modified_rental.drivy_fee + modified_rental.deductible_reduction_fee) - (rental.drivy_fee + rental.deductible_reduction_fee)).to_h)
     actions
   end
 end
