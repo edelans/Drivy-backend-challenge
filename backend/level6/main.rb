@@ -15,6 +15,15 @@ end
 
 # Describes the demand side of the market place
 class Rental
+  ROADSIDE_ASSISSTANCE_FEE_PER_DAY = 100
+  COMMISSION_RATE = 0.30
+  INSURANCE_PART_RATE = 0.50
+  DUDUCTIBLE_REDUCTION_OPTION_COST_PER_DAY = 400
+  DISCOUNTS = [
+    { start_day: 1, duration: 3, rate: 10.0 },
+    { start_day: 4, duration: 6, rate: 30.0 },
+    { start_day: 10, rate: 50.0 }
+  ]
   attr_reader :id, :start_date, :end_date, :distance, :car, :deductible_reduction
 
   # beware, car is a Car object
@@ -34,6 +43,14 @@ class Rental
   # it is the weighted average of all discounts accross the rental duration
   def discount
     discounts_sum = 0.0
+
+    # DISCOUNTS.each do |period_discount|
+    #   if period_discount.key?("duration")
+    #     discounts_sum += period_discount.rate * [[0, duration - period_discount.start_day].max, period_discount.duration].min
+    #   else
+    #     discounts_sum += (duration - period_discount.start_day) * period_discount.rate if duration > period_discount.start_day
+    #   end
+    # end
 
     # price per day decreases by 10% after 1 day, over a period of 3 days max
     discounts_sum += 10.0 * [[0, duration - 1].max, 3].min
@@ -61,7 +78,7 @@ class Rental
 
   def deductible_reduction_fee
     if deductible_reduction
-      duration * 400
+      duration * DUDUCTIBLE_REDUCTION_OPTION_COST_PER_DAY
     else
       0
     end
@@ -73,16 +90,16 @@ class Rental
 
   # half of the commision goes to the insurance
   def insurance_fee
-    (0.30 * 0.50 * price).round
+    (COMMISSION_RATE * INSURANCE_PART_RATE * price).round
   end
 
   # 1 euro per day goes to the roadside assistance (amounts are in cents)
   def assistance_fee
-    100 * duration
+    ROADSIDE_ASSISSTANCE_FEE_PER_DAY * duration
   end
 
   def drivy_fee
-    (0.30 * price - insurance_fee - assistance_fee).round
+    (COMMISSION_RATE * price - insurance_fee - assistance_fee).round
   end
 
   def driver_amount
@@ -147,7 +164,6 @@ class RentalModification
   end
 
   def modified_rental
-    # TODO: review following syntax
     @modified_rental ||= Rental.new(rental.id,
                                     start_date || rental.start_date,
                                     end_date || rental.end_date,
