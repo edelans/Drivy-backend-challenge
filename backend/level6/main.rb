@@ -17,7 +17,8 @@ end
 class Rental
   attr_reader :id, :start_date, :end_date, :distance, :car, :deductible_reduction
 
-  # initialize rentals with a dependency injection (car)
+  # beware, car is a Car object
+  # start_date and end_date are Date objects
   def initialize(id, start_date, end_date, distance, car, deductible_reduction)
     @id = id
     @start_date = start_date
@@ -84,13 +85,33 @@ class Rental
     (0.30 * price - insurance_fee - assistance_fee).round
   end
 
+  def driver_amount
+    - price - deductible_reduction_fee
+  end
+
+  def owner_amount
+    price - insurance_fee - assistance_fee - drivy_fee
+  end
+
+  def insurance_amount
+    insurance_fee
+  end
+
+  def assistance_amount
+    assistance_fee
+  end
+
+  def drivy_amount
+    drivy_fee + deductible_reduction_fee
+  end
+
   def generate_actions_hash
     actions = []
-    actions.push(Action.new('driver', - price - deductible_reduction_fee).to_hash)
-    actions.push(Action.new('owner', price - insurance_fee - assistance_fee - drivy_fee).to_hash)
-    actions.push(Action.new('insurance', insurance_fee).to_hash)
-    actions.push(Action.new('assistance', assistance_fee).to_hash)
-    actions.push(Action.new('drivy', drivy_fee + deductible_reduction_fee).to_hash)
+    actions.push(Action.new('driver', driver_amount).to_hash)
+    actions.push(Action.new('owner', owner_amount).to_hash)
+    actions.push(Action.new('insurance', insurance_amount).to_hash)
+    actions.push(Action.new('assistance', assistance_amount).to_hash)
+    actions.push(Action.new('drivy', drivy_amount).to_hash)
     actions
   end
 end
