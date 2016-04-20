@@ -135,7 +135,7 @@ end
 # describes a modification of a rental_id
 # attributes open to changes are : start_date, end_date, distance
 class RentalModification
-  attr_accessor :id, :rental, :start_date, :end_date, :distance
+  attr_reader :id, :rental, :start_date, :end_date, :distance
 
   # initialize rentalModification with a dependency injection (rental)
   def initialize(id, rental, start_date = nil, end_date = nil, distance = nil)
@@ -188,8 +188,8 @@ rentals = {}
 input['rentals'].each do |rental_hash|
   rentals[rental_hash['id']] = Rental.new(
     rental_hash['id'],
-    rental_hash['start_date'],
-    rental_hash['end_date'],
+    Date.parse(rental_hash['start_date']),
+    Date.parse(rental_hash['end_date']),
     rental_hash['distance'],
     cars[rental_hash['car_id']],
     rental_hash['deductible_reduction']
@@ -202,8 +202,8 @@ rental_modifications = input['rental_modifications'].map do |rental_modification
   RentalModification.new(
     rental_modification_hash['id'],
     rentals[rental_modification_hash['rental_id']],
-    rental_modification_hash['start_date'],
-    rental_modification_hash['end_date'],
+    Date.parse(rental_modification_hash['start_date']),
+    Date.parse(rental_modification_hash['end_date']),
     rental_modification_hash['distance']
   )
 end
