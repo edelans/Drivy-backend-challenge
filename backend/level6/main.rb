@@ -158,11 +158,11 @@ class RentalModification
 
   def generate_actions_hash
     actions = []
-    actions << Action.new('driver', - (modified_rental.price + modified_rental.deductible_reduction_fee) + (rental.price + rental.deductible_reduction_fee)).to_h
-    actions << Action.new('owner', (modified_rental.price - modified_rental.insurance_fee - modified_rental.assistance_fee - modified_rental.drivy_fee) -(rental.price - rental.insurance_fee - rental.assistance_fee - rental.drivy_fee)).to_h
-    actions << Action.new('insurance', modified_rental.insurance_fee - rental.insurance_fee).to_h
-    actions << Action.new('assistance', modified_rental.assistance_fee - rental.assistance_fee).to_h
-    actions << Action.new('drivy', (modified_rental.drivy_fee + modified_rental.deductible_reduction_fee) - (rental.drivy_fee + rental.deductible_reduction_fee)).to_h
+    actions << Action.new('driver', modified_rental.driver_amount - rental.driver_amount).to_h
+    actions << Action.new('owner', modified_rental.owner_amount - rental.owner_amount).to_h
+    actions << Action.new('insurance', modified_rental.insurance_amount - rental.insurance_amount).to_h
+    actions << Action.new('assistance', modified_rental.assistance_amount - rental.assistance_amount).to_h
+    actions << Action.new('drivy', modified_rental.drivy_amount - rental.drivy_amount).to_h
     actions
   end
 end
