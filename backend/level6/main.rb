@@ -31,7 +31,7 @@ class Rental
 
   attr_reader :id, :start_date, :end_date, :distance, :car, :deductible_reduction
 
-  # beware, car is a Car object
+  # car is a Car object
   # start_date and end_date are Date objects
   def initialize(id, start_date, end_date, distance, car, deductible_reduction)
     @id = id
@@ -74,11 +74,7 @@ class Rental
   end
 
   def deductible_reduction_fee
-    if deductible_reduction
-      duration * DEDUCTIBLE_REDUCTION_OPTION_COST_PER_DAY
-    else
-      0
-    end
+    deductible_reduction ? duration * DEDUCTIBLE_REDUCTION_OPTION_COST_PER_DAY : 0
   end
 
   def price

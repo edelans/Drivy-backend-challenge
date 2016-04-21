@@ -74,11 +74,7 @@ class Rental
   end
 
   def deductible_reduction_fee
-    if deductible_reduction
-      duration * 400
-    else
-      0
-    end
+    deductible_reduction ? duration * DEDUCTIBLE_REDUCTION_OPTION_COST_PER_DAY : 0
   end
 
   def price
