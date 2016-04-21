@@ -99,7 +99,7 @@ end
 # how much money must be debited/credited for each actor
 # actor can be driver/owner/insurance/assistance/drivy
 class Action
-  attr_accessor :actor, :type, :amount
+  attr_reader :actor, :type, :amount
 
   def initialize(actor, amount)
     @actor = actor
