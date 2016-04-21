@@ -142,7 +142,6 @@ class Action
   end
 end
 
-
 # load data
 input_file = File.read('data.json')
 input = JSON.parse(input_file)
