@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 require 'test/unit'
+require 'fileutils'
 require_relative 'main'
+
 
 # simple test case for testing level completion
 class TestLevel < Test::Unit::TestCase
