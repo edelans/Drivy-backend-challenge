@@ -24,6 +24,10 @@ class Rental
   DISCOUNT_PERIOD_3_RATE = 0.5
   DISCOUNT_PERIOD_3_START_DAY = 11
 
+  ROADSIDE_ASSISSTANCE_FEE_PER_DAY = 100
+  COMMISSION_RATE = 0.30
+  INSURANCE_PART_RATE = 0.50
+
   attr_reader :id, :start_date, :end_date, :distance, :car
 
   # car is a Car object
@@ -74,16 +78,16 @@ class Rental
 
   # half of the commision goes to the insurance
   def insurance_fee
-    (0.30 * 0.50 * price).round
+    (COMMISSION_RATE * INSURANCE_PART_RATE * price).round
   end
 
   # 1 euro per day goes to the roadside assistance (amounts are in cents)
   def assistance_fee
-    100 * duration
+    ROADSIDE_ASSISSTANCE_FEE_PER_DAY * duration
   end
 
   def drivy_fee
-    (0.30 * price - insurance_fee - assistance_fee).round
+    (COMMISSION_RATE * price - insurance_fee - assistance_fee).round
   end
 end
 
