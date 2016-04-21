@@ -15,9 +15,23 @@ end
 
 # Describes the demand side of the market place
 class Rental
+  ROADSIDE_ASSISSTANCE_FEE_PER_DAY = 100
+  COMMISSION_RATE = 0.30
+  INSURANCE_PART_RATE = 0.50
+  DEDUCTIBLE_REDUCTION_OPTION_COST_PER_DAY = 400
+
+  DISCOUNT_PERIOD_1_RATE = 0.1
+  DISCOUNT_PERIOD_1_START_DAY = 2
+
+  DISCOUNT_PERIOD_2_RATE = 0.3
+  DISCOUNT_PERIOD_2_START_DAY = 5
+
+  DISCOUNT_PERIOD_3_RATE = 0.5
+  DISCOUNT_PERIOD_3_START_DAY = 11
+
   attr_reader :id, :start_date, :end_date, :distance, :car, :deductible_reduction
 
-  # beware, car is a Car object
+  # car is a Car object
   # start_date and end_date are Date objects
   def initialize(id, start_date, end_date, distance, car, deductible_reduction)
     @id = id
@@ -28,31 +42,31 @@ class Rental
     @deductible_reduction = deductible_reduction
   end
 
-  # decreasing pricing for longer rentals
-  # the discount is an integer
-  # (0 < discount < 100)
-  # it is the weighted average of all discounts accross the rental duration
-  def discount
-    discounts_sum = 0.0
-
-    # price per day decreases by 10% after 1 day, over a period of 3 days max
-    discounts_sum += 10.0 * [[0, duration - 1].max, 3].min
-
-    # price per day decreases by 30% after 4 days, over a period of 6 days max
-    discounts_sum += 30.0 * [[0, duration - 4].max, 6].min
-
-    # price per day decreases by 50% after 10 days
-    discounts_sum += (duration - 10) * 50 if duration > 10
-
-    discounts_sum / duration
-  end
-
   def duration
     1 + (@end_date - @start_date).to_i
   end
 
+  # day (integer) is the day number of the rental
+  def discount_of_the_day(day)
+    case day
+    when (0..(DISCOUNT_PERIOD_1_START_DAY - 1)) then 0
+    when (DISCOUNT_PERIOD_1_START_DAY..(DISCOUNT_PERIOD_2_START_DAY - 1)) then DISCOUNT_PERIOD_1_RATE
+    when (DISCOUNT_PERIOD_2_START_DAY..(DISCOUNT_PERIOD_3_START_DAY - 1)) then DISCOUNT_PERIOD_2_RATE
+    else DISCOUNT_PERIOD_3_RATE
+    end
+  end
+
+  # day (integer) is the day number of the rental
+  def price_of_the_day(day)
+    (
+      (1 - discount_of_the_day(day)) * car.price_per_day
+    ).to_i
+  end
+
   def price_time_component
-    (duration * car.price_per_day * (1 - discount / 100)).to_i
+    (1..duration).reduce(0) do |sum, day|
+      sum + price_of_the_day(day)
+    end
   end
 
   def price_distance_component
@@ -60,11 +74,7 @@ class Rental
   end
 
   def deductible_reduction_fee
-    if deductible_reduction
-      duration * 400
-    else
-      0
-    end
+    deductible_reduction ? duration * DEDUCTIBLE_REDUCTION_OPTION_COST_PER_DAY : 0
   end
 
   def price
@@ -73,16 +83,16 @@ class Rental
 
   # half of the commision goes to the insurance
   def insurance_fee
-    (0.30 * 0.50 * price).round
+    (COMMISSION_RATE * INSURANCE_PART_RATE * price).round
   end
 
   # 1 euro per day goes to the roadside assistance (amounts are in cents)
   def assistance_fee
-    100 * duration
+    ROADSIDE_ASSISSTANCE_FEE_PER_DAY * duration
   end
 
   def drivy_fee
-    (0.30 * price - insurance_fee - assistance_fee).round
+    (COMMISSION_RATE * price - insurance_fee - assistance_fee).round
   end
 
   def driver_amount
@@ -119,7 +129,7 @@ end
 # describes how much money must be debited/credited for each actor
 # actor can be driver/owner/insurance/assistance/drivy
 class Action
-  attr_accessor :who, :type, :amount
+  attr_reader :who, :type, :amount
 
   def initialize(who, amount)
     @who = who
@@ -147,7 +157,6 @@ class RentalModification
   end
 
   def modified_rental
-    # TODO: review following syntax
     @modified_rental ||= Rental.new(rental.id,
                                     start_date || rental.start_date,
                                     end_date || rental.end_date,
@@ -199,12 +208,16 @@ end
 # parse the json into rental modifications objects
 # keeping the json structure
 rental_modifications = input['rental_modifications'].map do |rental_modification_hash|
+  start_date = rental_modification_hash.key?('start_date') ? Date.parse(rental_modification_hash['start_date']) : nil
+  end_date = rental_modification_hash.key?('end_date') ? Date.parse(rental_modification_hash['end_date']) : nil
+  distance = rental_modification_hash.key?('distance') ? rental_modification_hash['distance'] : nil
+
   RentalModification.new(
     rental_modification_hash['id'],
     rentals[rental_modification_hash['rental_id']],
-    Date.parse(rental_modification_hash['start_date']),
-    Date.parse(rental_modification_hash['end_date']),
-    rental_modification_hash['distance']
+    start_date,
+    end_date,
+    distance
   )
 end
 

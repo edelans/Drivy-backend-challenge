@@ -1,0 +1,36 @@
+before_script:
+  - ruby -v
+  - which ruby
+  - gem install bundler --no-ri --no-rdoc
+
+
+check_level1:
+  script:
+    - cd backend/level1
+    - ruby test.rb
+    - cd ..
+check_level2:
+  script:
+    - cd backend/level1
+    - ruby test.rb
+    - cd ..
+check_level3:
+  script:
+    - cd backend/level1
+    - ruby test.rb
+    - cd ..
+check_level4:
+  script:
+    - cd backend/level1
+    - ruby test.rb
+    - cd ..
+check_level5:
+  script:
+    - cd backend/level1
+    - ruby test.rb
+    - cd ..
+check_level6:
+  script:
+    - cd backend/level1
+    - ruby test.rb
+    - cd ..
