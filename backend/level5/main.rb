@@ -129,16 +129,16 @@ end
 # how much money must be debited/credited for each actor
 # actor can be driver/owner/insurance/assistance/drivy
 class Action
-  attr_reader :actor, :type, :amount
+  attr_reader :who, :type, :amount
 
-  def initialize(actor, amount)
-    @actor = actor
+  def initialize(who, amount)
+    @who = who
     @amount = amount.abs
     @type = amount > 0 ? 'credit' : 'debit'
   end
 
-  def to_hash
-    { actor: @actor, type: @type, amount: @amount }
+  def to_h
+    { who: @who, type: @type, amount: @amount }
   end
 end
 
