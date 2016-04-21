@@ -17,7 +17,8 @@ end
 class Rental
   attr_reader :id, :start_date, :end_date, :distance, :car, :deductible_reduction
 
-  # initialize rentals with a dependency injection (car)
+  # car is a Car object
+  # start_date and end_date are Date objects
   def initialize(id, start_date, end_date, distance, car, deductible_reduction)
     @id = id
     @start_date = start_date
@@ -47,7 +48,7 @@ class Rental
   end
 
   def duration
-    1 + (Date.parse(@end_date) - Date.parse(@start_date)).to_i
+    1 + (@end_date - @start_date).to_i
   end
 
   def price_time_component
@@ -105,8 +106,8 @@ end
 rentals = input['rentals'].map do |rental_hash|
   Rental.new(
     rental_hash['id'],
-    rental_hash['start_date'],
-    rental_hash['end_date'],
+    Date.parse(rental_hash['start_date']),
+    Date.parse(rental_hash['end_date']),
     rental_hash['distance'],
     cars[rental_hash['car_id']],
     rental_hash['deductible_reduction']

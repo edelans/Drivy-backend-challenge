@@ -37,29 +37,9 @@ class Rental
     @deductible_reduction = deductible_reduction
   end
 
-  # decreasing pricing for longer rentals
-  # the discount is an integer
-  # (0 < discount < 100)
-  # it is the weighted average of all discounts accross the rental duration
-  def discount
-    discounts_sum = 0.0
-
-    # DISCOUNTS.each do |period_discount|
-    #   if period_discount.key?("duration")
-    #     discounts_sum += period_discount.rate * [[0, duration - period_discount.start_day].max, period_discount.duration].min
-    #   else
-    #     discounts_sum += (duration - period_discount.start_day) * period_discount.rate if duration > period_discount.start_day
-    #   end
-    # end
-
-    # price per day decreases by 10% after 1 day, over a period of 3 days max
-    discounts_sum += 10.0 * [[0, duration - 1].max, 3].min
-
-    # price per day decreases by 30% after 4 days, over a period of 6 days max
-    discounts_sum += 30.0 * [[0, duration - 4].max, 6].min
-
-    # price per day decreases by 50% after 10 days
-    discounts_sum += (duration - 10) * 50 if duration > 10
+  def duration
+    1 + (@end_date - @start_date).to_i
+  end
 
     discounts_sum / duration
   end
@@ -215,12 +195,16 @@ end
 # parse the json into rental modifications objects
 # keeping the json structure
 rental_modifications = input['rental_modifications'].map do |rental_modification_hash|
+  start_date = rental_modification_hash.key?('start_date') ? Date.parse(rental_modification_hash['start_date']) : nil
+  end_date = rental_modification_hash.key?('end_date') ? Date.parse(rental_modification_hash['end_date']) : nil
+  distance = rental_modification_hash.key?('distance') ? rental_modification_hash['distance'] : nil
+
   RentalModification.new(
     rental_modification_hash['id'],
     rentals[rental_modification_hash['rental_id']],
-    Date.parse(rental_modification_hash['start_date']),
-    Date.parse(rental_modification_hash['end_date']),
-    rental_modification_hash['distance']
+    start_date,
+    end_date,
+    distance
   )
 end
 
