@@ -95,13 +95,33 @@ class Rental
     (COMMISSION_RATE * price - insurance_fee - assistance_fee).round
   end
 
+  def driver_amount
+    - price - deductible_reduction_fee
+  end
+
+  def owner_amount
+    price - insurance_fee - assistance_fee - drivy_fee
+  end
+
+  def insurance_amount
+    insurance_fee
+  end
+
+  def assistance_amount
+    assistance_fee
+  end
+
+  def drivy_amount
+    drivy_fee + deductible_reduction_fee
+  end
+
   def generate_actions_hash
     actions = []
-    actions.push(Action.new('driver', - price - deductible_reduction_fee).to_hash)
-    actions.push(Action.new('owner', price - insurance_fee - assistance_fee - drivy_fee).to_hash)
-    actions.push(Action.new('insurance', insurance_fee).to_hash)
-    actions.push(Action.new('assistance', assistance_fee).to_hash)
-    actions.push(Action.new('drivy', drivy_fee + deductible_reduction_fee).to_hash)
+    actions << Action.new('driver', driver_amount).to_h
+    actions << Action.new('owner', owner_amount).to_h
+    actions << Action.new('insurance', insurance_amount).to_h
+    actions << Action.new('assistance', assistance_amount).to_h
+    actions << Action.new('drivy', drivy_amount).to_h
     actions
   end
 end
