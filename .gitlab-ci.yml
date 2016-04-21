@@ -5,26 +5,7 @@ before_script:
 
 
 check_level1:
-  before_script: "cd backend/level1"
-  script: "ruby test.rb"
-  after_script: "cd .."
-check_level2:
-  before_script: "cd backend/level2"
-  script: "ruby test.rb"
-  after_script: "cd .."
-check_level3:
-  before_script: "cd backend/level3"
-  script: "ruby test.rb"
-  after_script: "cd .."
-check_level4:
-  before_script: "cd backend/level4"
-  script: "ruby test.rb"
-  after_script: "cd .."
-check_level5:
-  before_script: "cd backend/level5"
-  script: "ruby test.rb"
-  after_script: "cd .."
-check_level6:
-  before_script: "cd backend/level6"
-  script: "ruby test.rb"
-  after_script: "cd .."
+  script:
+    - cd backend/level1
+    - ruby test.rb
+    - cd ..
