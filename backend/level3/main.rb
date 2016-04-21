@@ -15,7 +15,20 @@ end
 
 # Describes the demand side of the market place
 class Rental
-  attr_reader :id, :start_date, :end_date, :distance, :car, :price_per_km, :price_per_day, :duration
+  DISCOUNT_PERIOD_1_RATE = 0.1
+  DISCOUNT_PERIOD_1_START_DAY = 2
+
+  DISCOUNT_PERIOD_2_RATE = 0.3
+  DISCOUNT_PERIOD_2_START_DAY = 5
+
+  DISCOUNT_PERIOD_3_RATE = 0.5
+  DISCOUNT_PERIOD_3_START_DAY = 11
+
+  ROADSIDE_ASSISSTANCE_FEE_PER_DAY = 100
+  COMMISSION_RATE = 0.30
+  INSURANCE_PART_RATE = 0.50
+
+  attr_reader :id, :start_date, :end_date, :distance, :car
 
   # car is a Car object
   # start_date and end_date are Date objects
@@ -31,8 +44,28 @@ class Rental
     1 + (@end_date - @start_date).to_i
   end
 
+
+  # day (integer) is the day number of the rental
+  def discount_of_the_day(day)
+    case day
+    when (0..(DISCOUNT_PERIOD_1_START_DAY - 1)) then 0
+    when (DISCOUNT_PERIOD_1_START_DAY..(DISCOUNT_PERIOD_2_START_DAY - 1)) then DISCOUNT_PERIOD_1_RATE
+    when (DISCOUNT_PERIOD_2_START_DAY..(DISCOUNT_PERIOD_3_START_DAY - 1)) then DISCOUNT_PERIOD_2_RATE
+    else DISCOUNT_PERIOD_3_RATE
+    end
+  end
+
+  # day (integer) is the day number of the rental
+  def price_of_the_day(day)
+    (
+      (1 - discount_of_the_day(day)) * car.price_per_day
+    ).to_i
+  end
+
   def price_time_component
-    duration * car.price_per_day
+    (1..duration).reduce(0) do |sum, day|
+      sum + price_of_the_day(day)
+    end
   end
 
   def price_distance_component
@@ -41,6 +74,20 @@ class Rental
 
   def price
     price_time_component + price_distance_component
+  end
+
+  # half of the commision goes to the insurance
+  def insurance_fee
+    (COMMISSION_RATE * INSURANCE_PART_RATE * price).round
+  end
+
+  # 1 euro per day goes to the roadside assistance (amounts are in cents)
+  def assistance_fee
+    ROADSIDE_ASSISSTANCE_FEE_PER_DAY * duration
+  end
+
+  def drivy_fee
+    (COMMISSION_RATE * price - insurance_fee - assistance_fee).round
   end
 end
 
@@ -76,16 +123,14 @@ output = {
   rentals: rentals.map do |rental|
     {
       id: rental.id,
-      price: rental.price
+      price: rental.price,
+      commission: {
+        insurance_fee: rental.insurance_fee,
+        assistance_fee: rental.assistance_fee,
+        drivy_fee: rental.drivy_fee
+      }
     }
   end
 }
 
 File.write('computed_output.json', JSON.pretty_generate(output) + "\n")
-
-# it 'should produce the correct output' do
-#   expected_output_file = File.read('output.json')
-#   expected_hash = JSON.parse(expected_output_file)
-#   actual_hash = output
-#   actual_hash.should eq(expected_hash)
-# end

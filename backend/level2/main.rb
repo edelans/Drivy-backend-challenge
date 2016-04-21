@@ -2,6 +2,10 @@
 require 'json'
 require 'date'
 
+################################################################################
+#                              class definition
+################################################################################
+
 # Describes the supply side of the market place
 class Car
   attr_reader :id, :price_per_day, :price_per_km
@@ -15,7 +19,16 @@ end
 
 # Describes the demand side of the market place
 class Rental
-  attr_reader :id, :start_date, :end_date, :distance, :car, :price_per_km, :price_per_day, :duration
+  DISCOUNT_PERIOD_1_RATE = 0.1
+  DISCOUNT_PERIOD_1_START_DAY = 2
+
+  DISCOUNT_PERIOD_2_RATE = 0.3
+  DISCOUNT_PERIOD_2_START_DAY = 5
+
+  DISCOUNT_PERIOD_3_RATE = 0.5
+  DISCOUNT_PERIOD_3_START_DAY = 11
+
+  attr_reader :id, :start_date, :end_date, :distance, :car
 
   # car is a Car object
   # start_date and end_date are Date objects
@@ -31,8 +44,27 @@ class Rental
     1 + (@end_date - @start_date).to_i
   end
 
+  # day (integer) is the day number of the rental
+  def discount_of_the_day(day)
+    case day
+    when (0..(DISCOUNT_PERIOD_1_START_DAY - 1)) then 0
+    when (DISCOUNT_PERIOD_1_START_DAY..(DISCOUNT_PERIOD_2_START_DAY - 1)) then DISCOUNT_PERIOD_1_RATE
+    when (DISCOUNT_PERIOD_2_START_DAY..(DISCOUNT_PERIOD_3_START_DAY - 1)) then DISCOUNT_PERIOD_2_RATE
+    else DISCOUNT_PERIOD_3_RATE
+    end
+  end
+
+  # day (integer) is the day number of the rental
+  def price_of_the_day(day)
+    (
+      (1 - discount_of_the_day(day)) * car.price_per_day
+    ).to_i
+  end
+
   def price_time_component
-    duration * car.price_per_day
+    (1..duration).reduce(0) do |sum, day|
+      sum + price_of_the_day(day)
+    end
   end
 
   def price_distance_component
@@ -43,6 +75,10 @@ class Rental
     price_time_component + price_distance_component
   end
 end
+
+################################################################################
+#                              output generation
+################################################################################
 
 # load data
 input_file = File.read('data.json')
@@ -82,10 +118,3 @@ output = {
 }
 
 File.write('computed_output.json', JSON.pretty_generate(output) + "\n")
-
-# it 'should produce the correct output' do
-#   expected_output_file = File.read('output.json')
-#   expected_hash = JSON.parse(expected_output_file)
-#   actual_hash = output
-#   actual_hash.should eq(expected_hash)
-# end
