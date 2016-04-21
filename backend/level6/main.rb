@@ -18,12 +18,17 @@ class Rental
   ROADSIDE_ASSISSTANCE_FEE_PER_DAY = 100
   COMMISSION_RATE = 0.30
   INSURANCE_PART_RATE = 0.50
-  DUDUCTIBLE_REDUCTION_OPTION_COST_PER_DAY = 400
-  DISCOUNTS = [
-    { start_day: 1, duration: 3, rate: 10.0 },
-    { start_day: 4, duration: 6, rate: 30.0 },
-    { start_day: 10, rate: 50.0 }
-  ]
+  DEDUCTIBLE_REDUCTION_OPTION_COST_PER_DAY = 400
+
+  DISCOUNT_PERIOD_1_RATE = 0.1
+  DISCOUNT_PERIOD_1_START_DAY = 2
+
+  DISCOUNT_PERIOD_2_RATE = 0.3
+  DISCOUNT_PERIOD_2_START_DAY = 5
+
+  DISCOUNT_PERIOD_3_RATE = 0.5
+  DISCOUNT_PERIOD_3_START_DAY = 11
+
   attr_reader :id, :start_date, :end_date, :distance, :car, :deductible_reduction
 
   # beware, car is a Car object
@@ -41,15 +46,27 @@ class Rental
     1 + (@end_date - @start_date).to_i
   end
 
-    discounts_sum / duration
+  # day (integer) is the day number of the rental
+  def discount_of_the_day(day)
+    case day
+    when (0..(DISCOUNT_PERIOD_1_START_DAY - 1)) then 0
+    when (DISCOUNT_PERIOD_1_START_DAY..(DISCOUNT_PERIOD_2_START_DAY - 1)) then DISCOUNT_PERIOD_1_RATE
+    when (DISCOUNT_PERIOD_2_START_DAY..(DISCOUNT_PERIOD_3_START_DAY - 1)) then DISCOUNT_PERIOD_2_RATE
+    else DISCOUNT_PERIOD_3_RATE
+    end
   end
 
-  def duration
-    1 + (@end_date - @start_date).to_i
+  # day (integer) is the day number of the rental
+  def price_of_the_day(day)
+    (
+      (1 - discount_of_the_day(day)) * car.price_per_day
+    ).to_i
   end
 
   def price_time_component
-    (duration * car.price_per_day * (1 - discount / 100)).to_i
+    (1..duration).reduce(0) do |sum, day|
+      sum + price_of_the_day(day)
+    end
   end
 
   def price_distance_component
@@ -58,7 +75,7 @@ class Rental
 
   def deductible_reduction_fee
     if deductible_reduction
-      duration * DUDUCTIBLE_REDUCTION_OPTION_COST_PER_DAY
+      duration * DEDUCTIBLE_REDUCTION_OPTION_COST_PER_DAY
     else
       0
     end
